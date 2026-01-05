@@ -31,13 +31,14 @@
           :key="index"
           class="flex items-center justify-between border rounded-lg px-3 py-2"
         >
-          <div class="flex items-center gap-2" @click="openEditDialog(task)">
+          <div class="flex items-center gap-2">
             <input type="checkbox" v-model="task.completed" />
             <span
               :class="
                 task.completed ? 'line-through text-gray-400' : 'text-gray-800'
               "
               class="text-sm"
+              @click="openEditDialog(task)"
             >
               {{ task.title }}
             </span>
