@@ -5,7 +5,7 @@
       <h2 class="text-xl font-semibold mb-4">{{ title }}</h2>
 
       <!-- Body -->
-      <div class="p-3">
+      <div class="p-3 w-full">
         <slot />
       </div>
 

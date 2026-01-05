@@ -1,21 +1,8 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
+import type { Todo } from "../models/todo";
 
 const API_URL = "https://jsonplaceholder.typicode.com/todos";
-
-// Todo interface
-export interface Todo {
-  id: number;
-  title: string;
-  completed: boolean;
-}
-
-// Props for creating/updating a todo
-export interface TodoPayload {
-  title: string;
-  id: number;
-  completed?: boolean;
-}
 
 export const useTodoStore = defineStore("todo", () => {
   // ===== State =====
@@ -43,7 +30,7 @@ export const useTodoStore = defineStore("todo", () => {
   };
 
   // CREATE: add a new todo
-  const addTodo = async (payload: TodoPayload) => {
+  const addTodo = async (payload: Todo) => {
     loading.value = true;
     error.value = null;
 
@@ -89,15 +76,15 @@ export const useTodoStore = defineStore("todo", () => {
   };
 
   // EDIT: update title or completed status
-  const editTodo = async (id: number, payload: TodoPayload) => {
-    const todo = todos.value.find((t) => t.id === id);
+  const editTodo = async (payload: Todo) => {
+    const todo = todos.value.find((t) => t.id === payload.id);
     if (!todo) return;
 
     loading.value = true;
     error.value = null;
 
     try {
-      const res = await fetch(`${API_URL}/${id}`, {
+      const res = await fetch(`${API_URL}/${payload.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

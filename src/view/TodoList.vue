@@ -9,7 +9,7 @@
         <input
           type="text"
           placeholder="Add new task"
-          v-model="newTitle"
+          v-model="title"
           class="flex-1 border-b border-gray-400 focus:outline-none py-1 text-sm"
         />
         <button
@@ -22,12 +22,16 @@
 
       <!-- Todo List -->
       <div class="space-y-3">
+        <div class="flex">
+          <button class="b-">Todo</button>
+          <button>completed</button>
+        </div>
         <div
           v-for="(task, index) in todoStore.todos"
           :key="index"
           class="flex items-center justify-between border rounded-lg px-3 py-2"
         >
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2" @click="openEditDialog(task)">
             <input type="checkbox" v-model="task.completed" />
             <span
               :class="
@@ -39,13 +43,9 @@
             </span>
           </div>
           <div>
-            <button
-              @click="onOpendDeleted(task.id)"
-              class="bg-red-700 hover:bg-gray-700 px-3 rounded-lg"
-            >
-              Deleted
+            <button @click="onOpendDeleted(task)" class="text-gray-500">
+              ×
             </button>
-            <button @click="openDialog(task.id, task)">edit</button>
           </div>
         </div>
       </div>
@@ -60,48 +60,51 @@
   <Dailog
     v-if="isDialogDelete"
     @no="isDialogDelete = false"
-    @yes="remove(editId)"
+    @yes="remove(payload.id)"
     title="Delete Todo"
   >
     <p>Are you sure to delete this todo?</p>
   </Dailog>
   <Dailog
-    v-if="isDialogOpen"
-    @no="isDialogOpen = false"
-    @yes="onEdit(editId, editTitle)"
+    v-if="isDialogEditOpen"
+    @no="isDialogEditOpen = false"
+    @yes="onEdit(payload)"
     title="Edit Todo"
   >
     <input
       type="text"
       placeholder="Add new task"
-      v-model="editTitle"
-      class="border-b border-gray-400 focus:outline-none py-1 text-sm mb-4"
+      v-model="payload.title"
+      class="border-b border-gray-400 focus:outline-none py-1 text-sm mb-4 w-full"
     />
   </Dailog>
 </template>
 <script setup lang="ts">
 import { onMounted, computed, ref } from "vue";
-import { type TodoPayload, useTodoStore } from "./../store/todo";
+import { useTodoStore } from "./../store/todo";
 import Dailog from "../components/Dailog.vue";
+import type { Todo } from "../models/todo";
 
 const todoStore = useTodoStore();
-const isDialogOpen = ref(false);
+const isDialogEditOpen = ref(false);
 const isDialogDelete = ref(false);
-const newTitle = ref("");
-const editId = ref(0);
-const editTitle = ref("");
+const title = ref("");
+const payload = ref<Todo>({
+  id: 0,
+  title: "",
+  completed: false,
+});
 
 const randomNumber = ref(0);
 
-const onOpendDeleted = (id: number) => {
+const onOpendDeleted = (todo: Todo) => {
   isDialogDelete.value = true;
-  editId.value = id;
+  payload.value = todo;
 };
 
-const openDialog = (id: number, payload: TodoPayload) => {
-  isDialogOpen.value = true;
-  editTitle.value = payload.title;
-  editId.value = id;
+const openEditDialog = (todo: Todo) => {
+  isDialogEditOpen.value = true;
+  payload.value = todo;
 };
 
 function generateNumber() {
@@ -112,14 +115,15 @@ function generateNumber() {
 // Call addTodo with the input value
 const onAddTodo = () => {
   generateNumber();
-  const payload: TodoPayload = {
-    title: newTitle.value.trim(),
+  const payload: Todo = {
+    title: title.value.trim(),
+    completed: false,
     id: randomNumber.value,
   };
   if (!payload.title) return; // prevent empty
 
   todoStore.addTodo(payload);
-  newTitle.value = ""; // clear input
+  title.value = ""; // clear input
 };
 
 // Wrapper function to call store action
@@ -128,13 +132,9 @@ const remove = (id: number) => {
   isDialogDelete.value = false;
 };
 
-const onEdit = (id: number, text: string) => {
-  const payload: TodoPayload = {
-    title: text.trim(),
-    id: editId.value,
-  };
-  todoStore.editTodo(id, payload);
-  isDialogOpen.value = false;
+const onEdit = (payload: Todo) => {
+  todoStore.editTodo(payload);
+  isDialogEditOpen.value = false;
 };
 
 onMounted(() => {
