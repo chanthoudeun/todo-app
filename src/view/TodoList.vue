@@ -32,7 +32,11 @@
           class="flex items-center justify-between border rounded-lg px-3 py-2"
         >
           <div class="flex items-center gap-2">
-            <input type="checkbox" v-model="task.completed" />
+            <input
+              type="checkbox"
+              :checked="task.completed"
+              @change="onCompletedTodo(task.id)"
+            />
             <span
               :class="
                 task.completed ? 'line-through text-gray-400' : 'text-gray-800'
@@ -79,6 +83,14 @@
       class="border-b border-gray-400 focus:outline-none py-1 text-sm mb-4 w-full"
     />
   </Dailog>
+  <div
+    v-if="todoStore.loading"
+    class="fixed inset-0 bg-black/20 flex items-center justify-center"
+  >
+    <div
+      class="w-10 h-10 border-4 border-white border-t-transparent rounded-full animate-spin"
+    ></div>
+  </div>
 </template>
 <script setup lang="ts">
 import { onMounted, computed, ref } from "vue";
@@ -96,8 +108,6 @@ const payload = ref<Todo>({
   completed: false,
 });
 
-const randomNumber = ref(0);
-
 const onOpendDeleted = (todo: Todo) => {
   isDialogDelete.value = true;
   payload.value = todo;
@@ -108,29 +118,27 @@ const openEditDialog = (todo: Todo) => {
   payload.value = todo;
 };
 
-function generateNumber() {
-  // Generate a random number between 1 and 100
-  randomNumber.value = Math.floor(Math.random() * 100) + 1;
-}
-
 // Call addTodo with the input value
 const onAddTodo = () => {
-  generateNumber();
   const payload: Todo = {
     title: title.value.trim(),
     completed: false,
-    id: randomNumber.value,
+    id: Date.now(),
   };
+
   if (!payload.title) return; // prevent empty
 
   todoStore.addTodo(payload);
   title.value = ""; // clear input
 };
 
-// Wrapper function to call store action
 const remove = (id: number) => {
   todoStore.removeTodo(id);
   isDialogDelete.value = false;
+};
+
+const onCompletedTodo = (id: number) => {
+  todoStore.toggleTodo(id);
 };
 
 const onEdit = (payload: Todo) => {
